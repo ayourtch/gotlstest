@@ -3,44 +3,51 @@ package main
 // go run client.go 127.0.0.1:6443 123
 
 import (
-    "os"
-    "log"
-    "crypto/tls"
+	"crypto/tls"
+	"log"
+	"os"
+	"strconv"
 )
 
 func main() {
-    log.SetFlags(log.Lshortfile)
+	log.SetFlags(log.Lshortfile)
 
-    conf := &tls.Config{
-         InsecureSkipVerify: true,
-    }
+	conf := &tls.Config{
+		InsecureSkipVerify: true,
+	}
 
-    conn, err := tls.Dial("tcp", os.Args[1], conf)
-    if err != nil {
-        log.Println(err)
-        return
-    }
-    defer conn.Close()
+	conn, err := tls.Dial("tcp", os.Args[1], conf)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer conn.Close()
 
-    msg := os.Args[2] + "\n"
-    n, err := conn.Write([]byte(msg))
+	msg := os.Args[2] + "\n"
+	count, _ := strconv.Atoi(os.Args[2])
+	println("Got count: ", count)
 
-    if err != nil {
-        log.Println(n, err)
-        return
-    }
+	n, err := conn.Write([]byte(msg))
 
-    buf := make([]byte, 100000)
-    log.Println("Reading")
-    n, err = conn.Read(buf)
-    log.Println("Read")
-    if err != nil {
-	log.Println("Error")
-        log.Println(n, err)
-        return
-    }
-    log.Println("Got: ", n)
+	if err != nil {
+		log.Println(n, err)
+		return
+	}
 
-    println(string(buf[:n]))
+	buf := make([]byte, 100000)
+	for count > 0 {
+		log.Println("Reading")
+		n, err = conn.Read(buf)
+		log.Println("Read")
+		if err != nil {
+			log.Println("Error")
+			log.Println(n, err)
+			return
+		}
+		log.Println("Got: ", n)
+
+		println(string(buf[:n]))
+		count = count - n
+	}
+	println("Done")
 }
-
